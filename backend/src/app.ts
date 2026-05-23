@@ -24,6 +24,11 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 // Admin routes — inject default user
 app.use("/api/users/me/event-types", injectUser, eventTypeRoutes);
 app.use("/api/availability/schedules", injectUser, availabilityRoutes);
