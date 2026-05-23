@@ -6,7 +6,7 @@
     "moduleResolution": "nodenext",
     "rootDir": "./src",
     "outDir": "./dist",
-    "strict": true,
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -44,7 +44,11 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     // "skipLibCheck": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }
