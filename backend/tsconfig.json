@@ -44,6 +44,7 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     // "skipLibCheck": true,
+    "types": ["node"]
   },
   "include": ["src"]
 }

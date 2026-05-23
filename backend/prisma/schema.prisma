@@ -160,6 +160,7 @@ model Booking {
   endAt           DateTime      @map("end_at") @db.Timestamptz
   status          BookingStatus @default(confirmed)
   cancelReason    String?       @map("cancel_reason")
+  cancelToken     String?       @unique @map("cancel_token")
   rescheduleToken String?       @unique @map("reschedule_token")
   createdAt       DateTime?     @default(now()) @map("created_at") @db.Timestamptz
 
