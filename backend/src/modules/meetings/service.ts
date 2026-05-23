@@ -45,6 +45,10 @@ export async function listMeetings(
       include: {
         eventType: { select: { id: true, title: true, slug: true } },
         attendees: { where: { isHost: false } },
+        host: { select: { name: true, email: true } },
+        bookingAnswers: {
+          include: { question: { select: { label: true } } },
+        },
       },
       orderBy,
       skip: (pagination.page - 1) * pagination.perPage,

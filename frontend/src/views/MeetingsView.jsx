@@ -13,6 +13,12 @@ export default function MeetingsView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [selectedTimezone, setSelectedTimezone] = useState(() => {
+    return typeof window !== "undefined"
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone
+      : "Asia/Kolkata";
+  });
+
   const load = useCallback(async () => {
     try {
       setLoading(true);
@@ -46,7 +52,10 @@ export default function MeetingsView() {
   return (
     <>
       <MeetingsHeader />
-      <MeetingsFilters />
+      <MeetingsFilters
+        selectedTimezone={selectedTimezone}
+        onTimezoneChange={setSelectedTimezone}
+      />
       {error && (
         <p className="mt-4 text-sm text-red-600">{error}</p>
       )}
@@ -56,6 +65,7 @@ export default function MeetingsView() {
         grouped={grouped}
         loading={loading}
         onCancel={handleCancel}
+        selectedTimezone={selectedTimezone}
       />
     </>
   );

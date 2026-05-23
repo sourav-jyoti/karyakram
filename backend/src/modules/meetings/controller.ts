@@ -26,15 +26,21 @@ export async function list(req: Request, res: Response): Promise<void> {
       status: m.status,
       start_at: m.startAt,
       end_at: m.endAt,
+      created_at: m.createdAt,
       event_type: {
         id: m.eventType.id,
         title: m.eventType.title,
         slug: m.eventType.slug,
       },
+      host: m.host,
       invitees: m.attendees.map((a) => ({
         name: a.name,
         email: a.email,
         timezone: a.timezone,
+      })),
+      answers: m.bookingAnswers.map((ba) => ({
+        question: ba.question.label,
+        answer: ba.answer,
       })),
     })),
     pagination: {

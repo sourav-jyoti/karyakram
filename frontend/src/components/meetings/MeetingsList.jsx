@@ -11,6 +11,7 @@ const MeetingsList = ({
   grouped = {},
   loading,
   onCancel,
+  selectedTimezone,
 }) => {
   const dates = Object.keys(grouped);
   const total = dates.reduce((n, d) => n + grouped[d].length, 0);
@@ -37,6 +38,7 @@ const MeetingsList = ({
                 key={meeting.id}
                 meeting={meeting}
                 onCancel={onCancel}
+                selectedTimezone={selectedTimezone}
               />
             ))}
           </div>

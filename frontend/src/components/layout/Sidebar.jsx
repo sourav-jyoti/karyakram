@@ -11,7 +11,7 @@ const Sidebar = () => {
           <Logo />
         </div>
         <div className="px-4 mb-4">
-          <SidebarCreateButton href="/scheduling" />
+          <SidebarCreateButton />
         </div>
         <SidebarNav />
       </div>
