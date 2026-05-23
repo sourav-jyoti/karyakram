@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//enums
+
+enum EventTypeKind {
+  one_to_one
+  one_to_many
+}
+
+enum BookingStatus {
+  confirmed
+  cancelled
+  rescheduled
+}
+
+enum NotificationType {
+  confirmation
+  cancellation
+  reminder_24h
+  reminder_1h
+}
+
+enum NotificationStatus {
+  pending
+  sent
+  failed
+}
+
+//users
+// The host. One user = one scheduling page.
+// slug becomes the public URL: /:slug/:event-slug
+
+model User {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  email     String   @unique
+  timezone  String // IANA e.g. "America/New_York"
+  slug      String   @unique // e.g. "alice" → /alice/30min
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  schedules  Schedule[]
+  eventTypes EventType[]
+  bookings   Booking[]   @relation("HostBookings")
+
+  @@map("users")
+}
+
+// schedules
+// A named set of working hours (e.g. "Work hours", "Weekends").
+// One user can have many schedules; an event_type points to the schedule it uses.
+
+model Schedule {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId   String @map("user_id") @db.Uuid
+  name     String
+  timezone String // IANA — the timezone for this schedule
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availabilityRules AvailabilityRule[]
+  dateOverrides     DateOverride[]
+  eventTypes        EventType[]
+
+  @@map("schedules")
+}
+
+// availability rules
+// Recurring weekly windows. Stored as TIME (no date, no UTC).
+// 0=Sun, 1=Mon … 6=Sat
+// Backend expands these day-by-day into UTC instants at query time.
+
+model AvailabilityRule {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheduleId String   @map("schedule_id") @db.Uuid
+  dayOfWeek  Int      @map("day_of_week") @db.SmallInt // 0-6
+  startTime  DateTime @map("start_time") @db.Time
+  endTime    DateTime @map("end_time") @db.Time
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@map("availability_rules")
+}
+
+// date overrides
+// Override availability for a specific date.
+// is_unavailable=true → block entire day (holiday, day off).
+// is_unavailable=false → custom hours that replace the recurring rule.
+
+model DateOverride {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheduleId    String    @map("schedule_id") @db.Uuid
+  overrideDate  DateTime  @map("override_date") @db.Date
+  startTime     DateTime? @map("start_time") @db.Time // null when is_unavailable = true
+  endTime       DateTime? @map("end_time") @db.Time // null when is_unavailable = true
+  isUnavailable Boolean   @default(false) @map("is_unavailable")
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@map("date_overrides")
+}
+
+//  event types
+// The "product" the host offers (e.g. "30-min coffee chat").
+// buffer_before/after: minutes blocked before/after each booking.
+
+model EventType {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String        @map("user_id") @db.Uuid
+  scheduleId      String        @map("schedule_id") @db.Uuid
+  title           String
+  slug            String // e.g. "30min" → /alice/30min
+  durationMinutes Int           @map("duration_minutes")
+  type            EventTypeKind @default(one_to_one)
+  maxInvitees     Int           @default(1) @map("max_invitees")
+  bufferBeforeMin Int           @default(0) @map("buffer_before_min")
+  bufferAfterMin  Int           @default(0) @map("buffer_after_min")
+  isActive        Boolean       @default(true) @map("is_active")
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schedule        Schedule         @relation(fields: [scheduleId], references: [id])
+  customQuestions CustomQuestion[]
+  bookings        Booking[]
+
+  @@unique([userId, slug])
+  @@map("event_types")
+}
+
+// custom questions
+// field_type: 'text' | 'textarea' | 'select' | 'checkbox'
+
+model CustomQuestion {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventTypeId String  @map("event_type_id") @db.Uuid
+  label       String
+  fieldType   String  @default("text") @map("field_type")
+  required    Boolean @default(false)
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  eventType      EventType       @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  bookingAnswers BookingAnswer[]
+
+  @@map("custom_questions")
+}
+
+// bookings
+// The single source of truth for a meeting.
+// start_at/end_at are always UTC (TIMESTAMPTZ).
+
+model Booking {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventTypeId     String        @map("event_type_id") @db.Uuid
+  hostUserId      String        @map("host_user_id") @db.Uuid
+  startAt         DateTime      @map("start_at") @db.Timestamptz
+  endAt           DateTime      @map("end_at") @db.Timestamptz
+  status          BookingStatus @default(confirmed)
+  cancelReason    String?       @map("cancel_reason")
+  rescheduleToken String?       @unique @map("reschedule_token")
+  createdAt       DateTime?     @default(now()) @map("created_at") @db.Timestamptz
+
+  eventType      EventType       @relation(fields: [eventTypeId], references: [id])
+  host           User            @relation("HostBookings", fields: [hostUserId], references: [id])
+  attendees      Attendee[]
+  bookingAnswers BookingAnswer[]
+  notifications  Notification[]
+
+  // Partial unique index — prevent double booking for confirmed slots
+  // NOTE: Prisma does not natively support filtered/partial indexes.
+  // Apply this via a raw migration:
+  //   CREATE UNIQUE INDEX no_double_booking
+  //     ON bookings(host_user_id, start_at)
+  //     WHERE status = 'confirmed';
+
+  @@map("bookings")
+}
+
+// attendees
+// For 1:1 → host + 1 invitee. For 1:M → 1 host + N invitees.
+
+model Attendee {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId String  @map("booking_id") @db.Uuid
+  name      String
+  email     String
+  timezone  String // IANA at time of booking
+  isHost    Boolean @default(false) @map("is_host")
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("attendees")
+}
+
+// booking answers
+// Invitee responses to custom_questions.
+
+model BookingAnswer {
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId  String @map("booking_id") @db.Uuid
+  questionId String @map("question_id") @db.Uuid
+  answer     String
+
+  booking  Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  question CustomQuestion @relation(fields: [questionId], references: [id])
+
+  @@map("booking_answers")
+}
+
+//  notifications
+// Queue for confirmation/cancellation/reminder emails.
+// Your email job worker polls WHERE status = 'pending' AND scheduled_at <= now().
+
+model Notification {
+  id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId      String             @map("booking_id") @db.Uuid
+  recipientEmail String             @map("recipient_email")
+  type           NotificationType
+  status         NotificationStatus @default(pending)
+  scheduledAt    DateTime           @map("scheduled_at") @db.Timestamptz
+  sentAt         DateTime?          @map("sent_at") @db.Timestamptz
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
