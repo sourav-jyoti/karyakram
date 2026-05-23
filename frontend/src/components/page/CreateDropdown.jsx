@@ -22,37 +22,6 @@ const CreateDropdown = ({ onSelect }) => {
         description="Webinars, online classes, etc."
         onClick={() => onSelect('Group')}
       />
-      <CreateDropdownItem 
-        title="Round robin"
-        host="Rotating hosts"
-        invitee="1 invitee"
-        description="Distribute meetings between team members"
-        onClick={() => onSelect('Round robin')}
-      />
-      <CreateDropdownItem 
-        title="Collective"
-        host="Multiple hosts"
-        invitee="1 invitee"
-        description="Panel interviews, group sales calls, etc."
-        onClick={() => onSelect('Collective')}
-      />
-
-      <div className="h-px bg-gray-200 my-2 w-full"></div>
-
-      <div className="px-5 py-3 font-bold text-[#304859] text-[14px]">
-        More ways to meet
-      </div>
-      
-      <CreateDropdownItem 
-        title="One-off meeting"
-        description="Offer time outside your normal schedule"
-        onClick={() => onSelect('One-off meeting')}
-      />
-      <CreateDropdownItem 
-        title="Meeting poll"
-        description="Let invitees vote on a time to meet"
-        onClick={() => onSelect('Meeting poll')}
-      />
     </div>
   );
 };

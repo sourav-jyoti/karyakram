@@ -61,6 +61,33 @@ export async function createEventType(body: {
   return event_type;
 }
 
+export async function getEventType(id: string): Promise<EventType> {
+  const { event_type } = await request<{ event_type: EventType }>(
+    `/api/users/me/event-types/${id}`
+  );
+  return event_type;
+}
+
+export async function updateEventType(
+  id: string,
+  body: Partial<{
+    title: string;
+    slug: string;
+    duration_minutes: number;
+    schedule_id: string;
+    buffer_before_min: number;
+    buffer_after_min: number;
+    is_active: boolean;
+    custom_questions: { label: string; field_type?: string; required?: boolean; sort_order?: number }[];
+  }>
+): Promise<EventType> {
+  const { event_type } = await request<{ event_type: EventType }>(
+    `/api/users/me/event-types/${id}`,
+    { method: "PATCH", body: JSON.stringify(body) }
+  );
+  return event_type;
+}
+
 export async function deleteEventType(id: string): Promise<void> {
   await request(`/api/users/me/event-types/${id}`, { method: "DELETE" });
 }

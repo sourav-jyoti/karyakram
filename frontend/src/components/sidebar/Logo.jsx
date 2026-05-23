@@ -7,7 +7,7 @@ const Logo = () => {
       <div className="flex items-center gap-2 text-calendlyBlue font-bold text-[1.4rem] tracking-tight">
         <div className="w-[30px] h-[30px] rounded-full bg-calendlyBlue flex items-center justify-center text-white relative flex-shrink-0">
           <div className="w-[14px] h-[14px] bg-white rounded-full absolute left-1 border-2 border-calendlyBlue"></div>
-          <span className="z-10 ml-1 text-sm font-black">C</span>
+          <span className="z-10 ml-1 text-sm font-black">K</span>
         </div>
         Karyakram
       </div>

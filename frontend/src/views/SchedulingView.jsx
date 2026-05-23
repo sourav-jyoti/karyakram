@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import TermsBanner from "@/components/banner/TermsBanner";
+import { useRouter, useSearchParams } from "next/navigation";
 import PageHeader from "@/components/page/PageHeader";
 import PageTabs from "@/components/page/PageTabs";
 import SearchBar from "@/components/page/SearchBar";
@@ -20,8 +20,16 @@ export default function SchedulingView() {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [panelType, setPanelType] = useState(null);
   const [search, setSearch] = useState("");
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Derive panel state from URL
+  const pane = searchParams.get("pane");
+  const paneState = searchParams.get("paneState");
+  const paneType = searchParams.get("type");
+  const isPanelOpen = pane === "event_type_editor" && !!paneState;
 
   const load = useCallback(async () => {
     try {
@@ -44,8 +52,8 @@ export default function SchedulingView() {
           type: et.type === "one_to_many" ? "Group" : "One-on-One",
           schedule: et.schedule
             ? summarizeWeeklyRules(
-                scheduleList.find((s) => s.id === et.schedule?.id)?.rules ?? []
-              ) || et.schedule.name
+              scheduleList.find((s) => s.id === et.schedule?.id)?.rules ?? []
+            ) || et.schedule.name
             : "—",
           showExtraIcons: true,
           color: "bg-calendlyPurple",
@@ -68,6 +76,10 @@ export default function SchedulingView() {
     e.title.toLowerCase().includes(search.toLowerCase())
   );
 
+  const closePanel = () => {
+    router.push("/scheduling");
+  };
+
   const handleCreate = async (form) => {
     const defaultSchedule = schedules[0];
     if (!defaultSchedule) throw new Error("No availability schedule found");
@@ -76,10 +88,10 @@ export default function SchedulingView() {
       slug: form.slug,
       duration_minutes: form.durationMinutes,
       schedule_id: form.scheduleId || defaultSchedule.id,
-      buffer_before_min: form.bufferBefore,
-      buffer_after_min: form.bufferAfter,
+      buffer_before_min: form.bufferBefore ?? 0,
+      buffer_after_min: form.bufferAfter ?? 0,
     });
-    setPanelType(null);
+    closePanel();
     await load();
   };
 
@@ -91,8 +103,7 @@ export default function SchedulingView() {
 
   return (
     <>
-      <TermsBanner />
-      <PageHeader onOpenPanel={setPanelType} />
+      <PageHeader />
       <PageTabs />
       <SearchBar value={search} onChange={setSearch} />
 
@@ -113,11 +124,11 @@ export default function SchedulingView() {
         />
       )}
 
-      {panelType && (
+      {isPanelOpen && (
         <CreateEventPanel
-          type={panelType}
+          type={paneType || "One-on-One"}
           schedules={schedules}
-          onClose={() => setPanelType(null)}
+          onClose={closePanel}
           onCreate={handleCreate}
         />
       )}

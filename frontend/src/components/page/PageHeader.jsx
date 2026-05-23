@@ -1,12 +1,21 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { HelpCircle, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import CreateDropdown from './CreateDropdown';
 
-const PageHeader = ({ onOpenPanel }) => {
+function generatePaneId() {
+  const bytes = new Uint8Array(6);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, '').slice(0, 8);
+}
+
+const PageHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -20,7 +29,12 @@ const PageHeader = ({ onOpenPanel }) => {
 
   const handleSelect = (type) => {
     setIsOpen(false);
-    onOpenPanel(type);
+    const paneId = generatePaneId();
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('pane', 'event_type_editor');
+    params.set('paneState', paneId);
+    params.set('type', type);
+    router.push(`/scheduling?${params.toString()}`);
   };
 
   return (

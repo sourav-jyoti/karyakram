@@ -1,15 +1,19 @@
 import React from "react";
 
-const PanelFooter = ({ onClose, onSubmit, submitting }) => {
+const PanelFooter = ({ onMoreOptions, onSubmit, submitting, showMoreOptions = true }) => {
   return (
     <div className="absolute bottom-0 left-0 right-0 px-10 py-6 bg-white border-t border-gray-200 flex items-center justify-between">
-      <button
-        type="button"
-        onClick={onClose}
-        className="text-[15px] font-bold text-[#1D2A4B] hover:text-calendlyBlue transition-colors"
-      >
-        Cancel
-      </button>
+      {showMoreOptions ? (
+        <button
+          type="button"
+          onClick={onMoreOptions}
+          className="text-[15px] font-bold text-[#1D2A4B] hover:text-calendlyBlue transition-colors"
+        >
+          More options
+        </button>
+      ) : (
+        <div />
+      )}
       <button
         type="button"
         onClick={onSubmit}
