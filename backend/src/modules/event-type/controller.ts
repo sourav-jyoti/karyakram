@@ -16,7 +16,7 @@ export async function list(req: Request, res: Response): Promise<void> {
   const eventTypes = await eventTypeService.listEventTypes(userId, filters);
 
   res.json({
-    event_types: eventTypes.map((et) => formatEventType(et)),
+    event_types: eventTypes.map((et) => formatEventType(et, req.user!.slug)),
   });
 }
 
@@ -26,7 +26,7 @@ export async function get(req: Request, res: Response): Promise<void> {
   const userId = req.user!.id;
   const eventTypeId = String(req.params.eventTypeId);
   const et = await eventTypeService.getEventType(userId, eventTypeId);
-  res.json({ event_type: formatEventType(et) });
+  res.json({ event_type: formatEventType(et, req.user!.slug) });
 }
 
 // ─── Create ─────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ export async function create(req: Request, res: Response): Promise<void> {
   }
 
   const et = await eventTypeService.createEventType(userId, body);
-  res.status(201).json({ event_type: formatEventType(et) });
+  res.status(201).json({ event_type: formatEventType(et, req.user!.slug) });
 }
 
 // ─── Update ─────────────────────────────────────────────────────────
@@ -50,7 +50,7 @@ export async function update(req: Request, res: Response): Promise<void> {
   const body = req.body as UpdateEventTypeBody;
   const eventTypeId = String(req.params.eventTypeId);
   const et = await eventTypeService.updateEventType(userId, eventTypeId, body);
-  res.json({ event_type: formatEventType(et) });
+  res.json({ event_type: formatEventType(et, req.user!.slug) });
 }
 
 // ─── Delete ─────────────────────────────────────────────────────────
@@ -64,7 +64,8 @@ export async function remove(req: Request, res: Response): Promise<void> {
 
 // ─── Response formatter ─────────────────────────────────────────────
 
-function formatEventType(et: any) {
+function formatEventType(et: any, userSlug?: string) {
+  const slug = userSlug ?? et.user?.slug ?? "";
   const result: Record<string, unknown> = {
     id: et.id,
     title: et.title,
@@ -75,7 +76,7 @@ function formatEventType(et: any) {
     buffer_before_min: et.bufferBeforeMin,
     buffer_after_min: et.bufferAfterMin,
     is_active: et.isActive,
-    booking_url: `/${et.user?.slug ?? ""}/${et.slug}`,
+    booking_url: `/${slug}/${et.slug}`,
   };
 
   if (et.schedule) {
