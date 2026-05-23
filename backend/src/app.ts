@@ -12,41 +12,10 @@ import notificationRoutes from "./modules/notifications/routes.js";
 
 const app = express();
 
+// Middleware
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      const allowedOrigins = [
-        "http://localhost:3000",
-        "http://localhost:4000",
-        "http://127.0.0.1:3000",
-      ];
-
-      if (process.env.FRONTEND_URL) {
-        const normalized = process.env.FRONTEND_URL.trim().replace(/\/$/, "");
-        allowedOrigins.push(normalized);
-        if (!normalized.startsWith("http")) {
-          allowedOrigins.push(`https://${normalized}`);
-          allowedOrigins.push(`http://${normalized}`);
-        }
-      }
-
-      const isAllowed = allowedOrigins.some(
-        (allowed) => origin.replace(/\/$/, "") === allowed.replace(/\/$/, "")
-      );
-
-      if (isAllowed || process.env.NODE_ENV !== "production") {
-        callback(null, true);
-      } else {
-        // Also allow Vercel dynamic preview domains or default to allowing for production safety if desired,
-        // but let's log the error and allow it to avoid blocker
-        console.warn(`CORS blocked request from origin: ${origin}`);
-        callback(null, true); // Fallback to true to ensure deployments don't get blocked by strict cors mismatch
-      }
-    },
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
