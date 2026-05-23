@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import BookingView from "@/views/BookingView";
 
 type Props = {
@@ -6,5 +7,10 @@ type Props = {
 
 export default async function PublicBookingPage({ params }: Props) {
   const { userSlug, eventSlug } = await params;
-  return <BookingView userSlug={userSlug} eventSlug={eventSlug} />;
+  
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-calendlyGrayText">Loading booking page…</div>}>
+      <BookingView userSlug={userSlug} eventSlug={eventSlug} />
+    </Suspense>
+  );
 }
