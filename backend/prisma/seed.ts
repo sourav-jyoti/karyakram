@@ -76,7 +76,7 @@ async function main() {
         isActive: true,
       },
     });
-    console.log(`✅ Event Type: ${et.title} (/${et.slug})`);
+    console.log(`Event Type: ${et.title} (/${et.slug})`);
   }
 
   // ─── 4. Sample custom question ─────────────────────────────────────
@@ -98,11 +98,11 @@ async function main() {
           sortOrder: 1,
         },
       });
-      console.log("✅ Custom Question added to 30-min Coffee Chat");
+      console.log(" Custom Question added to 30-min Coffee Chat");
     }
   }
 
-  console.log("\n🎉 Seeding complete!");
+  console.log("\n Seeding complete!");
 }
 
 function timeToDate(time: string): Date {
