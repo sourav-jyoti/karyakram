@@ -11,21 +11,32 @@ const USER_ID = "11111111-1111-1111-1111-111111111111";
 const SCHEDULE_ID = "22222222-2222-2222-2222-222222222222";
 
 async function main() {
-  console.log("🌱 Seeding database...\n");
+  console.log("Seeding database...\n");
+
+  // Safe cascaded cleanup of bookings and questions to avoid foreign key violations on reset
+  await prisma.notification.deleteMany({});
+  await prisma.bookingAnswer.deleteMany({});
+  await prisma.attendee.deleteMany({});
+  await prisma.booking.deleteMany({});
+  await prisma.customQuestion.deleteMany({});
 
   // ─── 1. Default user ───────────────────────────────────────────────
   await prisma.user.upsert({
     where: { id: USER_ID },
-    update: {},
+    update: {
+      name: "Sourav",
+      email: "sourav@karyakram.com",
+      slug: "sourav",
+    },
     create: {
       id: USER_ID,
-      name: "Alice Demo",
-      email: "alice@karyakram.com",
+      name: "Sourav",
+      email: "sourav@karyakram.com",
       timezone: "Asia/Kolkata",
-      slug: "alice",
+      slug: "sourav",
     },
   });
-  console.log("✅ User: Alice Demo (alice)");
+  console.log(" User: Sourav (sourav)");
 
   // ─── 2. Default schedule: Mon–Fri, 09:00–17:00 IST ────────────────
   await prisma.schedule.upsert({
@@ -56,17 +67,18 @@ async function main() {
   console.log("✅ Schedule: Work Hours (Mon–Fri, 09:00–17:00 IST)");
 
   // ─── 3. Event types ────────────────────────────────────────────────
+  // Delete existing event types to avoid duplicate/stale event types on re-seed
+  await prisma.eventType.deleteMany({ where: { userId: USER_ID } });
+
   const eventTypes = [
-    { title: "30-min Coffee Chat", slug: "30min", duration: 30, bufferAfter: 10 },
-    { title: "60-min Strategy Call", slug: "60min", duration: 60, bufferAfter: 15 },
-    { title: "15-min Quick Sync", slug: "15min", duration: 15, bufferAfter: 5 },
+    { title: "30-min Coffee Chat", slug: "30-min-coffee-chat", duration: 30, bufferAfter: 10 },
+    { title: "60-min Strategy Call", slug: "60-min-strategy-call", duration: 60, bufferAfter: 15 },
+    { title: "15-min Quick Sync", slug: "15-min-quick-sync", duration: 15, bufferAfter: 5 },
   ];
 
   for (const et of eventTypes) {
-    await prisma.eventType.upsert({
-      where: { userId_slug: { userId: USER_ID, slug: et.slug } },
-      update: {},
-      create: {
+    await prisma.eventType.create({
+      data: {
         userId: USER_ID,
         scheduleId: SCHEDULE_ID,
         title: et.title,
@@ -81,7 +93,7 @@ async function main() {
 
   // ─── 4. Sample custom question ─────────────────────────────────────
   const coffeeChat = await prisma.eventType.findFirst({
-    where: { userId: USER_ID, slug: "30min" },
+    where: { userId: USER_ID, slug: "30-min-coffee-chat" },
   });
 
   if (coffeeChat) {
