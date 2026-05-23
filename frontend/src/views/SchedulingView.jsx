@@ -109,7 +109,7 @@ export default function SchedulingView() {
 
       {error && (
         <p className="mt-4 text-sm text-red-600">
-          {error}. Is the backend running on port 4000?
+          {error}
         </p>
       )}
       {loading ? (
