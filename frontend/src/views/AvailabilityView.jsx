@@ -6,7 +6,13 @@ import AvailabilityTabs from "@/components/availability/AvailabilityTabs";
 import ScheduleHeader from "@/components/availability/ScheduleHeader";
 import WeeklyHours from "@/components/availability/WeeklyHours";
 import DateSpecificHours from "@/components/availability/DateSpecificHours";
-import { getOverrides, getSchedules, updateSchedule } from "@/lib/api";
+import {
+  createOverride,
+  deleteOverride as deleteOverrideApi,
+  getOverrides,
+  getSchedules,
+  updateSchedule,
+} from "@/lib/api";
 
 export default function AvailabilityView() {
   const [schedules, setSchedules] = useState([]);
@@ -36,17 +42,25 @@ export default function AvailabilityView() {
     load();
   }, [load]);
 
-  useEffect(() => {
+  // Load overrides when selected schedule changes
+  const loadOverrides = useCallback(async () => {
     if (!selected?.id) return;
     const now = new Date();
     const from = now.toISOString().slice(0, 10);
     const to = new Date(now.getFullYear(), now.getMonth() + 3, 1)
       .toISOString()
       .slice(0, 10);
-    getOverrides(selected.id, from, to)
-      .then(setOverrides)
-      .catch(() => setOverrides([]));
+    try {
+      const list = await getOverrides(selected.id, from, to);
+      setOverrides(list);
+    } catch {
+      setOverrides([]);
+    }
   }, [selected?.id]);
+
+  useEffect(() => {
+    loadOverrides();
+  }, [loadOverrides]);
 
   const handleSaveRules = async (rules) => {
     if (!selected) return;
@@ -58,6 +72,46 @@ export default function AvailabilityView() {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleTimezoneChange = async (timezone) => {
+    if (!selected) return;
+    setSaving(true);
+    try {
+      const updated = await updateSchedule(selected.id, { timezone });
+      setSchedules((prev) =>
+        prev.map((s) => (s.id === updated.id ? updated : s))
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCreateOverrides = async (dates, config) => {
+    if (!selected?.id) return;
+    for (const date of dates) {
+      try {
+        await createOverride(selected.id, {
+          override_date: date,
+          is_unavailable: config.is_unavailable,
+          start_time: config.start_time,
+          end_time: config.end_time,
+        });
+      } catch (e) {
+        console.warn(`Override for ${date} may already exist:`, e);
+      }
+    }
+    await loadOverrides();
+  };
+
+  const handleDeleteOverride = async (overrideId) => {
+    if (!selected?.id) return;
+    try {
+      await deleteOverrideApi(selected.id, overrideId);
+      setOverrides((prev) => prev.filter((o) => o.id !== overrideId));
+    } catch (e) {
+      console.error("Failed to delete override:", e);
     }
   };
 
@@ -82,8 +136,14 @@ export default function AvailabilityView() {
               schedule={selected}
               saving={saving}
               onSaveRules={handleSaveRules}
+              onTimezoneChange={handleTimezoneChange}
             />
-            <DateSpecificHours overrides={overrides} />
+            <DateSpecificHours
+              overrides={overrides}
+              scheduleId={selected?.id}
+              onCreateOverrides={handleCreateOverrides}
+              onDeleteOverride={handleDeleteOverride}
+            />
           </div>
         </>
       )}

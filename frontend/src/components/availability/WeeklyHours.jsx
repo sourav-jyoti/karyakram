@@ -1,15 +1,55 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ChevronDown, Globe } from "lucide-react";
 import DayRow from "./DayRow";
 import { dayLabel } from "@/lib/format";
 
-const WeeklyHours = ({ schedule, saving, onSaveRules }) => {
+const COMMON_TIMEZONES = [
+  "Asia/Kolkata",
+  "Asia/Colombo",
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+  "America/Toronto",
+  "America/Sao_Paulo",
+  "Europe/London",
+  "Europe/Paris",
+  "Europe/Berlin",
+  "Europe/Moscow",
+  "Asia/Dubai",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Asia/Shanghai",
+  "Australia/Sydney",
+  "Pacific/Auckland",
+];
+
+function formatTimezone(tz) {
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    const time = formatter.format(now);
+    const label = tz.replace(/_/g, " ").replace(/\//g, ", ");
+    return `${label} (${time})`;
+  } catch {
+    return tz;
+  }
+}
+
+const WeeklyHours = ({ schedule, saving, onSaveRules, onTimezoneChange }) => {
   const [rules, setRules] = useState([]);
+  const [selectedTimezone, setSelectedTimezone] = useState(schedule?.timezone ?? "Asia/Kolkata");
 
   useEffect(() => {
     setRules(schedule?.rules?.length ? [...schedule.rules] : []);
+    if (schedule?.timezone) setSelectedTimezone(schedule.timezone);
   }, [schedule]);
 
   const ruleForDay = (day) =>
@@ -36,6 +76,11 @@ const WeeklyHours = ({ schedule, saving, onSaveRules }) => {
     );
     setRules(next);
     onSaveRules?.(next);
+  };
+
+  const handleTimezoneChange = (tz) => {
+    setSelectedTimezone(tz);
+    onTimezoneChange?.(tz);
   };
 
   return (
@@ -70,8 +115,26 @@ const WeeklyHours = ({ schedule, saving, onSaveRules }) => {
         })}
       </div>
 
-      <div className="mt-8 text-[14px] font-semibold text-calendlyText">
-        {schedule?.timezone ?? "—"}
+      {/* Timezone dropdown */}
+      <div className="mt-8 flex items-center gap-2">
+        <Globe size={16} className="text-calendlyBlue flex-shrink-0" />
+        <div className="relative flex-1">
+          <select
+            value={selectedTimezone}
+            onChange={(e) => handleTimezoneChange(e.target.value)}
+            className="w-full text-[14px] font-semibold text-calendlyBlue bg-transparent border-none outline-none cursor-pointer appearance-none pr-6 hover:text-calendlyBlueHover transition-colors"
+          >
+            {COMMON_TIMEZONES.map((tz) => (
+              <option key={tz} value={tz}>
+                {formatTimezone(tz)}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            size={14}
+            className="absolute right-0 top-1/2 -translate-y-1/2 text-calendlyBlue pointer-events-none"
+          />
+        </div>
       </div>
     </div>
   );

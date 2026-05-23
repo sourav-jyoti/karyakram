@@ -6,12 +6,6 @@ const AvailabilityTabs = () => {
       <button className="pb-3 text-[14px] font-bold text-calendlyText border-b-2 border-calendlyBlue">
         Schedules
       </button>
-      <button className="pb-3 text-[14px] font-medium text-calendlyGrayText hover:text-calendlyText transition-colors border-b-2 border-transparent">
-        Calendar settings
-      </button>
-      <button className="pb-3 text-[14px] font-medium text-calendlyGrayText hover:text-calendlyText transition-colors border-b-2 border-transparent">
-        Advanced settings
-      </button>
     </div>
   );
 };

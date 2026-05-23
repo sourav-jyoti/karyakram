@@ -127,6 +127,32 @@ export async function getOverrides(
   return overrides;
 }
 
+export async function createOverride(
+  scheduleId: string,
+  body: {
+    override_date: string;
+    is_unavailable: boolean;
+    start_time?: string;
+    end_time?: string;
+  }
+): Promise<DateOverride> {
+  const { override } = await request<{ override: DateOverride }>(
+    `/api/availability/schedules/${scheduleId}/overrides`,
+    { method: "POST", body: JSON.stringify(body) }
+  );
+  return override;
+}
+
+export async function deleteOverride(
+  scheduleId: string,
+  overrideId: string
+): Promise<void> {
+  await request(
+    `/api/availability/schedules/${scheduleId}/overrides/${overrideId}`,
+    { method: "DELETE" }
+  );
+}
+
 // —— Meetings ——
 
 export async function getMeetings(params: {
