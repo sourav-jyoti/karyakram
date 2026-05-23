@@ -90,6 +90,8 @@ export default function SchedulingView() {
       schedule_id: form.scheduleId || defaultSchedule.id,
       buffer_before_min: form.bufferBefore ?? 0,
       buffer_after_min: form.bufferAfter ?? 0,
+      type: form.type === "Group" ? "one_to_many" : "one_to_one",
+      max_invitees: form.type === "Group" ? form.maxInvitees : 1,
     });
     closePanel();
     await load();

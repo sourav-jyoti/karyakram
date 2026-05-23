@@ -73,6 +73,7 @@ export async function createEventType(userId: string, data: CreateEventTypeBody)
         slug: data.slug,
         durationMinutes: data.duration_minutes,
         type: (data.type as any) ?? "one_to_one",
+        maxInvitees: data.max_invitees ?? 1,
         bufferBeforeMin: data.buffer_before_min ?? 0,
         bufferAfterMin: data.buffer_after_min ?? 0,
         isActive: data.is_active ?? true,
@@ -136,6 +137,7 @@ export async function updateEventType(
   if (data.buffer_before_min !== undefined) updateData.bufferBeforeMin = data.buffer_before_min;
   if (data.buffer_after_min !== undefined) updateData.bufferAfterMin = data.buffer_after_min;
   if (data.is_active !== undefined) updateData.isActive = data.is_active;
+  if (data.max_invitees !== undefined) updateData.maxInvitees = data.max_invitees;
 
   // If custom_questions included, replace-all in a transaction
   if (data.custom_questions !== undefined) {

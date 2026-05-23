@@ -38,6 +38,7 @@ const CreateEventPanel = ({ type, schedules = [], onClose, onCreate }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [maxInvitees, setMaxInvitees] = useState(10);
 
   // Booking question state
   const [questions, setQuestions] = useState([]);
@@ -99,7 +100,9 @@ const CreateEventPanel = ({ type, schedules = [], onClose, onCreate }) => {
         scheduleId,
         bufferBefore,
         bufferAfter,
+        type,
         ...(questions.length > 0 && { customQuestions: questions }),
+        ...(type === "Group" && { maxInvitees: Number(maxInvitees) }),
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create");
@@ -167,6 +170,25 @@ const CreateEventPanel = ({ type, schedules = [], onClose, onCreate }) => {
                 </button>
               </div>
             </PanelSection>
+
+            {/* ─── Max Invitees (Group meeting only) ─────── */}
+            {type === "Group" && (
+              <PanelSection title="Max invitees" isExpanded={true}>
+                <div className="flex flex-col gap-1.5">
+                  <input
+                    type="number"
+                    min={2}
+                    max={100}
+                    value={maxInvitees}
+                    onChange={(e) => setMaxInvitees(Math.max(2, Number(e.target.value)))}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 text-[15px] text-[#1D2A4B] focus:outline-none focus:ring-2 focus:ring-calendlyBlue/20 focus:border-calendlyBlue transition-all"
+                  />
+                  <span className="text-[12px] text-gray-400 font-semibold mt-1">
+                    Specify the maximum number of invitees allowed to attend this group event.
+                  </span>
+                </div>
+              </PanelSection>
+            )}
 
             {/* ─── Location ─────────────────────────────── */}
             <PanelSection title="Location" isExpanded={false}>

@@ -14,6 +14,7 @@ export interface CreateEventTypeBody {
   buffer_before_min?: number;
   buffer_after_min?: number;
   is_active?: boolean;
+  max_invitees?: number;
   custom_questions?: CustomQuestionInput[];
 }
 
@@ -26,6 +27,7 @@ export interface UpdateEventTypeBody {
   buffer_before_min?: number;
   buffer_after_min?: number;
   is_active?: boolean;
+  max_invitees?: number;
   custom_questions?: CustomQuestionInput[];
 }
 
