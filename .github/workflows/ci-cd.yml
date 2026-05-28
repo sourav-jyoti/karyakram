@@ -132,12 +132,11 @@ jobs:
         run: |
           aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME || 'hilarious-synth-orca' }} --region ${{ secrets.AWS_REGION || 'us-east-1' }}
 
-      # Apply standard backend, frontend, and ingress manifests
+      # Apply standard backend and frontend manifests
       - name: Deploy Kubernetes Manifests
         run: |
           kubectl apply -f k8s/backend.yml
           kubectl apply -f k8s/frontend.yml
-          kubectl apply -f k8s/ingress.yml
 
       # Dynamically update pod images to trigger a rolling update with the new commit tag
       - name: Update Pod Images & Trigger Rolling Update
