@@ -134,11 +134,12 @@ jobs:
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
 
-      # Apply standard backend and frontend manifests
+      # Apply standard backend, frontend, and ingress manifests
       - name: Deploy Kubernetes Manifests
         run: |
           kubectl apply -f k8s/backend.yml
           kubectl apply -f k8s/frontend.yml
+          kubectl apply -f k8s/ingress.yml
 
       # Dynamically update pod images to trigger a rolling update with the new commit tag
       - name: Update Pod Images & Trigger Rolling Update

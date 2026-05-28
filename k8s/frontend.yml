@@ -45,4 +45,4 @@ spec:
     - protocol: TCP
       port: 3000
       targetPort: 3000
-  type: LoadBalancer  # Expose publicly using AWS Elastic Load Balancer (ELB)
+  type: ClusterIP  # Private to cluster, exposed externally via ALB Ingress
