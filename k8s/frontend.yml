@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karyakram-frontend-deployment
+  labels:
+    app: karyakram-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: karyakram-frontend
+  template:
+    metadata:
+      labels:
+        app: karyakram-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: karyakram-frontend:latest  # Tag will be updated dynamically during CD
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: BACKEND_URL
+              value: "http://karyakram-backend-service:4000"
+            - name: API_URL
+              value: "http://karyakram-backend-service:4000"
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: karyakram-frontend-service
+spec:
+  selector:
+    app: karyakram-frontend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: LoadBalancer  # Expose publicly using AWS Elastic Load Balancer (ELB)
